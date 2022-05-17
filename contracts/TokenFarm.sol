@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -12,22 +12,24 @@ contract TokenFarm is Ownable {
     address[] public allowedTokens;
     address[] public stakers;
     IERC20 public lampToken;
-    mapping(address => address) tokenPriceFeedMapping;
+    mapping(address => address) public tokenPriceFeedMapping;
 
     constructor(address _lampTokenAddress) {
         lampToken = IERC20(_lampTokenAddress);
     }
 
-    function stakeToken(uint256 _amount, address _token) public {
+    // tested
+    function stakeTokens(uint256 _amount, address token) public {
         require(_amount > 0, "amount should be more than 0.");
-        require(tokenIsAllowed(_token), "token isn't allowed to stake");
-        IERC20(_token).transferFrom(msg.sender, address(this), _amount);
+        require(tokenIsAllowed(token), "token isn't allowed to stake");
 
-        updateUniqueTokensStaked(msg.sender, _token);
+        updateUniqueTokensStaked(msg.sender, token);
+
+        IERC20(token).transferFrom(msg.sender, address(this), _amount);
 
         // update the local mapping for account and token balance
-        stakingBalance[msg.sender][_token] =
-            stakingBalance[msg.sender][_token] +
+        stakingBalance[msg.sender][token] =
+            stakingBalance[msg.sender][token] +
             _amount;
 
         // if unique tokens staked by staker is equal to 1 then update the
@@ -37,12 +39,13 @@ contract TokenFarm is Ownable {
         }
     }
 
+    // tested
     function unStakeToken(address _token) public {
         // confirm the balance is there for the staker
         // transfer to caller
 
         uint256 userBalance = stakingBalance[msg.sender][_token];
-        require(userBalance <= 0, "not enough balance to unstake");
+        require(userBalance > 0, "not enough balance to unstake");
         IERC20(_token).transfer(msg.sender, userBalance);
 
         // update staking balance
@@ -93,7 +96,7 @@ contract TokenFarm is Ownable {
 
     function getUserTotalValue(address _user) public view returns (uint256) {
         uint256 totalValue = 0;
-        require(uniqueTokensStaked[_user] <= 0, "No tokens staked");
+        require(uniqueTokensStaked[_user] > 0, "No tokens staked");
         for (
             uint32 allowedTokensIndex;
             allowedTokensIndex < allowedTokens.length;

@@ -1,41 +1,47 @@
-from brownie import LampToken, TokenFarm, config, network
+from brownie import LampToken, TokenFarm, config, network, DappToken
 from scripts.helpful_scripts import get_account, get_contract
+from web3 import Web3
 
-KEPT_BALANCE = 100
+KEPT_BALANCE = Web3.toWei(100, "ether")
 
 
-def deploy_token_farm_and_lamp_token():
+def deploy_token_farm_and_dapp_token(update_front_end_flag=False):
     account = get_account()
-    print(f"Account: {account}")
-    # deploy Lamp Token contract
-    lamp_token = LampToken.deploy({"from": account})
+    dapp_token = DappToken.deploy({"from": account})
+    token_farm = TokenFarm.deploy(
+        dapp_token.address,
+        {"from": account},
+        publish_source=config["networks"][network.show_active()]["verify"],
+    )
+    print(f"tokens transfering to token farm: {dapp_token.totalSupply() - 100}")
+    print(f"tokens transfering to token farm: {dapp_token.totalSupply() - KEPT_BALANCE}")
 
-    # deploy Token Farm contract
-    token_farm = TokenFarm.deploy(lamp_token.address, {
-                                  "from": account}, publish_source=config["networks"][network.show_active()]["verify"])
+    tx = dapp_token.transfer(
+        token_farm.address,
+        dapp_token.totalSupply() - KEPT_BALANCE,
+        {"from": account},
+    )
 
-    # Transfer the Lamp tokens to Token Farm contract
-    tx = lamp_token.transfer(token_farm.address,
-                             lamp_token.totalSupply() - KEPT_BALANCE, {"from": account})
+    # print(f"total balance with token farm {}")
     tx.wait(1)
+    info = tx.traceback()
+    print(f"transfer info: {info}")
 
-    # Add allowed tokens; their token_address and price feeds for tokens
-    # 1. LAMP (erc20), FAU/DAI (dai token), WETH (erc20)
-
-    weth_token = get_contract("weth_token")
     fau_token = get_contract("fau_token")
+    weth_token = get_contract("weth_token")
 
-    # maps token addresses with their price feeds
-    dict_of_allowed_tokens = {
-        lamp_token: get_contract("dai_usd_price_feed"),
-        weth_token: get_contract("eth_usd_price_feed"),
-        fau_token: get_contract("dai_usd_price_feed")
-    }
-    # create a dict of token addresses to their price feed addresses
-    # mocking locally.
-    add_allowed_tokens(token_farm, dict_of_allowed_tokens, account)
-    return token_farm, lamp_token
-
+    add_allowed_tokens(
+        token_farm,
+        {
+            dapp_token: get_contract("dai_usd_price_feed"),
+            fau_token: get_contract("dai_usd_price_feed"),
+            weth_token: get_contract("eth_usd_price_feed"),
+        },
+        account,
+    )
+    # if update_front_end_flag:
+        # update_front_end()
+    return token_farm, dapp_token
 
 def add_allowed_tokens(token_farm, dict_of_allowed_tokens, account):
     for token in dict_of_allowed_tokens:
@@ -50,4 +56,5 @@ def add_allowed_tokens(token_farm, dict_of_allowed_tokens, account):
 
 
 def main():
-    deploy_token_farm_and_lamp_token()
+    # deploy_token_farm_and_lamp_token()
+    deploy_token_farm_and_dapp_token()

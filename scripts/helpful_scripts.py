@@ -10,6 +10,7 @@ def get_account(Index=None, Id=None):
         return accounts.load(id)
     if (network.show_active() in FORKED_LOCAL_ENVIRONMENTS or
             network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS):
+        print("<<< returning local first account >>>")
         return accounts[0]
     return accounts.add(config["wallets"]["from_key"])
 
@@ -52,8 +53,8 @@ def get_contract(contract_name):
     return contract
 
 
-DECIMALS = 8
-INITIAL_VALUE = 200000000000
+DECIMALS = 18
+INITIAL_VALUE = 2000000000000000000000
 
 
 def deploy_mocks(decimals=DECIMALS, initial_value=INITIAL_VALUE):

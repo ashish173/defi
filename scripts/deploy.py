@@ -1,11 +1,16 @@
+import json
 from brownie import LampToken, TokenFarm, config, network, DappToken
 from scripts.helpful_scripts import get_account, get_contract
 from web3 import Web3
+import json
+import yaml 
+import shutil 
+import os 
 
 KEPT_BALANCE = Web3.toWei(100, "ether")
 
 
-def deploy_token_farm_and_dapp_token(update_front_end_flag=False):
+def deploy_token_farm_and_dapp_token(front_end_update=False):
     account = get_account()
     dapp_token = DappToken.deploy({"from": account})
     token_farm = TokenFarm.deploy(
@@ -13,8 +18,6 @@ def deploy_token_farm_and_dapp_token(update_front_end_flag=False):
         {"from": account},
         publish_source=config["networks"][network.show_active()]["verify"],
     )
-    print(f"tokens transfering to token farm: {dapp_token.totalSupply() - 100}")
-    print(f"tokens transfering to token farm: {dapp_token.totalSupply() - KEPT_BALANCE}")
 
     tx = dapp_token.transfer(
         token_farm.address,
@@ -39,8 +42,8 @@ def deploy_token_farm_and_dapp_token(update_front_end_flag=False):
         },
         account,
     )
-    # if update_front_end_flag:
-        # update_front_end()
+    if front_end_update:
+        update_front_end()
     return token_farm, dapp_token
 
 def add_allowed_tokens(token_farm, dict_of_allowed_tokens, account):
@@ -54,7 +57,23 @@ def add_allowed_tokens(token_farm, dict_of_allowed_tokens, account):
         set_tx.wait(1)
     return token_farm
 
+def update_front_end():
+    # Send the build folder
+    copy_folders_to_front_end("./build", "./front_end/src/chain-info")
+
+    # Sending the front end our config in JSON format
+    with open("brownie-config.yaml", "r") as brownie_config:
+        config_dict = yaml.load(brownie_config, Loader=yaml.FullLoader)
+        with open("./front_end/src/brownie-config.json", "w") as brownie_config_json:
+            json.dump(config_dict, brownie_config_json)
+    print("Front end updated!")
+
+
+def copy_folders_to_front_end(src, dest):
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    shutil.copytree(src, dest)
+
 
 def main():
-    # deploy_token_farm_and_lamp_token()
-    deploy_token_farm_and_dapp_token()
+    deploy_token_farm_and_dapp_token(front_end_update=True)

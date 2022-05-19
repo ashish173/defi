@@ -1,17 +1,25 @@
 import React from 'react';
-import { DAppProvider, ChainId, Kovan, Rinkeby } from '@usedapp/core'
+import { DAppProvider, Config, Kovan, Rinkeby } from '@usedapp/core'
 import { Header } from './components/Header'
 import { Container } from "@material-ui/core"
 import { Main } from "./components/Main"
+import { getDefaultProvider } from 'ethers'
+
+const config: Config = {
+  readOnlyChainId: Kovan.chainId,
+  readOnlyUrls: {
+    [Kovan.chainId]: getDefaultProvider('kovan'),
+  },
+}
 
 function App() {
   return (
-    <DAppProvider config={{
-      networks: [Kovan, Rinkeby]
-    }}>
+    <DAppProvider config={
+      config
+      // TODO: refactor the code to also work with Ganache local development
+    }>
       <Container maxWidth="md"> 
         <Header></Header>
-        <div>Hi</div>
         <Main></Main>
       </Container>
     </DAppProvider>

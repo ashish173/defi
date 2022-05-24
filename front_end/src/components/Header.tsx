@@ -21,9 +21,11 @@ export const Header = () => {
         <div className={classes.container}>
             <div>
                 {isConnected ? (
+                    <div>
+                    <span>Account: {account}</span>
                     <Button color="primary" variant="contained" onClick={deactivate}>
                         Disconnect
-                    </Button>) : (
+                    </Button> </div>)  : (
                     <Button color="primary" variant="contained" onClick={activateBrowserWallet}>
                         Connect
                     </Button>

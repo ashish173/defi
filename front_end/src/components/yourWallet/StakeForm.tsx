@@ -17,25 +17,57 @@ export const StakeForm = ({token}: StakeFormProps) => {
     // display the amount
     const { address: tokenAddress } = token
     const [amount, setAmount] = useState<number | string | Array<number | string>>(0)
+    const { notifications } = useNotifications()
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newAmount = event.target.value === "" ? "" : Number(event.target.value)
         setAmount(newAmount)
-        console.log(newAmount)
     }
 
-    const { approve, approveErc20State } = useStakeTokens(tokenAddress)
+    const { approveAndStake, state: approveAndStakeErc20State } = useStakeTokens(tokenAddress)
     
-
     const handleStakeSubmit = () => {
         const amountAsWei = utils.parseEther(amount.toString())
-        return approve(amountAsWei.toString())
+        return approveAndStake(amountAsWei.toString())
     }
+
+    useEffect(() => {
+        // console.log(notifications)
+        if (
+            notifications.filter(
+                (notification) => 
+                    notification.type === "transactionSucceed" && 
+                    notification.transactionName === "Approve erc20 transaction"
+                
+            ).length > 0
+        ) {
+            // console.log('transactions approve is successful')
+        }
+        if (notifications.filter(
+            (notification) => 
+                notification.type === "transactionSucceed" &&
+                notification.transactionName === "Stake tokens"
+        ).length > 0) {
+            // console.log('transaction transfer is successful')
+        }
+    }, [notifications])
+
+    useEffect(() => {
+        console.log(approveAndStakeErc20State)
+        console.log("state: =>", approveAndStakeErc20State.status)
+    }, [approveAndStakeErc20State])
+
+    const isMining = approveAndStakeErc20State.status === "Mining"
 
     return (
         <div>
-        <Input onChange={handleInputChange} ></Input>
-        <Button onClick={handleStakeSubmit}>Stake</Button>
-         </div>
+            <Input onChange={handleInputChange} autoFocus={true}></Input>
+            <Button 
+                onClick={handleStakeSubmit} 
+                disabled={isMining}>
+                {isMining ? <CircularProgress size={26} /> : "Stake" }
+
+            </Button>        
+        </div>
     )
 }

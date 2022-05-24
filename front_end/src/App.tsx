@@ -1,5 +1,5 @@
 import React from 'react';
-import { DAppProvider, Config, Kovan, Rinkeby } from '@usedapp/core'
+import { DAppProvider, Config, Kovan } from '@usedapp/core'
 import { Header } from './components/Header'
 import { Container } from "@material-ui/core"
 import { Main } from "./components/Main"
@@ -10,6 +10,10 @@ const config: Config = {
   readOnlyUrls: {
     [Kovan.chainId]: getDefaultProvider('kovan'),
   },
+  notifications: {
+    expirationPeriod: 1000,
+    checkInterval: 1000
+  }
 }
 
 function App() {

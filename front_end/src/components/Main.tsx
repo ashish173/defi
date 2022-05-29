@@ -7,6 +7,7 @@ import dai from "../dai.png"
 import eth from "../eth.png"
 import dapp from "../dapp.png"
 import { YourWallet } from "./yourWallet"
+import { TokenFarm } from "./tokenFarm/tokenFarm"
 
 export type Token = {
     image: string 
@@ -36,5 +37,10 @@ export const Main = () => {
         {name: "Dai", image: dai, address: fauTokenAddress},
     ]
 
-    return (<YourWallet supportedTokens={supportedTokens}/>)
+    return (
+        <div>
+            <YourWallet supportedTokens={supportedTokens}/>
+            <TokenFarm supportedTokens={supportedTokens}></TokenFarm>
+        </div>
+    )
 }

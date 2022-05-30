@@ -54,6 +54,20 @@ contract TokenFarm is Ownable {
         uniqueTokensStaked[msg.sender] = uniqueTokensStaked[msg.sender] - 1;
     }
 
+    // unstake partial amount from the token farm contract
+    function unStakeTokenPartial(address _token, uint256 amount) public {
+        uint256 userBalance = stakingBalance[msg.sender][_token];
+        require(userBalance > 0, "not enough balance to unstake");
+        require(amount <= userBalance, "can't withdraw more than user balance");
+        IERC20(_token).transfer(msg.sender, amount);
+
+        stakingBalance[msg.sender][_token] = userBalance - amount;
+
+        if (amount == userBalance) {
+            uniqueTokensStaked[msg.sender] = uniqueTokensStaked[msg.sender] - 1;
+        }
+    }
+
     function updateUniqueTokensStaked(address _user, address _token) internal {
         if (stakingBalance[_user][_token] <= 0) {
             uniqueTokensStaked[_user] = uniqueTokensStaked[_user] + 1;

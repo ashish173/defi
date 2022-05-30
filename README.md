@@ -4,7 +4,8 @@ This project is from the (Solidity, Blockchain, and Smart Contract Course – Be
 
 Functionality
 [x] Stake
-[ ] Un-Stake
+[x] Unstake complete
+[ ] Unstake partial
 [ ] Borrow
 [ ] Repay
 [ ] Flashloan

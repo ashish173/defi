@@ -1,4 +1,5 @@
 from lib2to3.pgen2 import token
+from webbrowser import get
 import pytest
 from scripts.helpful_scripts import get_account, get_contract, LOCAL_BLOCKCHAIN_ENVIRONMENTS, INITIAL_VALUE
 from scripts.deploy import KEPT_BALANCE, deploy_token_farm_and_dapp_token
@@ -6,7 +7,8 @@ from brownie import TokenFarm, LampToken, network, exceptions, DappToken
 import pytest
 from web3 import Web3
 
-AMOUNT = Web3.toWei(1, "ether")
+STAKE_AMOUNT = Web3.toWei(1, "ether")
+UNSTAKE_AMOUNT = Web3.toWei(0.5, "ether")
 
 def test_set_token_price_feed():
     # Prepare
@@ -34,16 +36,16 @@ def test_stake_tokens():
     # Act
     # stakers stake various amounts of tokens
     approval = lamp_token.approve(
-        token_farm.address, AMOUNT, {"from": account})
+        token_farm.address, STAKE_AMOUNT, {"from": account})
 
-    token_farm.stakeTokens(AMOUNT, lamp_token.address, {
+    token_farm.stakeTokens(STAKE_AMOUNT, lamp_token.address, {
         "from": account})
  
 
     user_balance = lamp_token.balanceOf(account.address)
     # stakers get equivalent lamp tokens for their value staked
     assert (
-        token_farm.stakingBalance(account, lamp_token.address) == AMOUNT
+        token_farm.stakingBalance(account, lamp_token.address) == STAKE_AMOUNT
     )
     return token_farm, lamp_token
 
@@ -69,6 +71,21 @@ def test_unstake_tokens():
         token_farm.uniqueTokensStaked(account.address) == 0
     )
 
+def test_partial_unstake_tokens():
+    account = get_account()
+    token_farm, dapp_token = test_stake_tokens()
+
+    token_farm.unStakeTokenPartial(dapp_token.address, UNSTAKE_AMOUNT)
+
+    balance_dapp = dapp_token.balanceOf(account.address)
+
+    assert (
+        balance_dapp == KEPT_BALANCE - STAKE_AMOUNT + UNSTAKE_AMOUNT
+    )
+    assert (
+        token_farm.uniqueTokensStaked(account.address) == 1
+    )
+
 def test_issue_tokens():
     # prepare
     # get account
@@ -80,7 +97,7 @@ def test_issue_tokens():
     print(f"user balance {user_balance}")
     # stakers get equivalent lamp tokens for their value staked
     assert (
-        token_farm.stakingBalance(account, lamp_token.address) == AMOUNT
+        token_farm.stakingBalance(account, lamp_token.address) == STAKE_AMOUNT
     )
 
     token_farm.issueTokens({"from": account})

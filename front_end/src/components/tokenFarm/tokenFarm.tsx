@@ -6,7 +6,7 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import { makeStyles } from "@material-ui/core"
-import {UnStake} from "../tokenFarm/unStake"
+import {UnStake} from "./UnStake"
 import { TokenBalance } from "./tokenBalance";
 
 interface TokenFarmProps {
